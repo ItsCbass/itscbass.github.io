@@ -10,14 +10,92 @@
     <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
-    <a class="logo" href="index.html">
-      <div class="logo-text">SR©</div>
-      <div class="logo-year">09.23.2025</div>
-    </a>
-    <h1 class="title">Binary Thoughts</h1>
-    <div class="blog-description">
-      Fuck it, just read the source code.™
+    <div class="container">
+      <div class="header">
+        <a class="logo" href="index.html">
+          <div class="logo-text">SR©</div>
+          <div class="logo-year">09.23.2025</div>
+        </a>
+        <h1 class="title">DEADC0DE</h1>
+        <div class="blog-description">
+          Rants on security in an unsecure world.™
+        </div>
+      </div>
+
+      <div class="blog-layout">
+        <div class="folder-sidebar">
+          <div class="folder-section">
+            <div class="folder-header">/ FILTERS</div>
+            <div class="folder-item" data-filter="all">
+              <div class="folder-icon"></div>
+              <div class="folder-name">All</div>
+              <div class="folder-count">(1)</div>
+            </div>
+            <div class="folder-item" data-filter="security">
+              <div class="folder-icon"></div>
+              <div class="folder-name">Security</div>
+              <div class="folder-count">(1)</div>
+            </div>
+            <div class="folder-item" data-filter="npm">
+              <div class="folder-icon"></div>
+              <div class="folder-name">NPM</div>
+              <div class="folder-count">(1)</div>
+            </div>
+            <div class="folder-item" data-filter="supply-chain">
+              <div class="folder-icon"></div>
+              <div class="folder-name">Supply Chain</div>
+              <div class="folder-count">(1)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="main-articles">
+          <div class="articles-header-main">/ ARTICLES</div>
+          <div class="articles-grid">
+            <div class="article-main-item" data-categories="security,npm,supply-chain">
+              <div class="article-main-date">2025.09.23</div>
+              <a href="cached_software_rendering.html" class="article-main-title">Shai-Hulud: the self-replicating npm worm that turned our build systems against us</a>
+              <div class="article-expand">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="posts"><div class="post_item"><span class="post_date">2025.09.23</span> <span class="post_title"><a href="cached_software_rendering.html">Shai-Hulud: the self-replicating npm worm that turned our build systems against us</a></span></div></div>
+
+    <script>
+      // Filter functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const filterItems = document.querySelectorAll('.folder-item[data-filter]');
+        const articleItems = document.querySelectorAll('.article-main-item');
+        
+        // Set "All" as active by default
+        document.querySelector('.folder-item[data-filter="all"]').classList.add('active');
+        
+        filterItems.forEach(item => {
+          item.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            
+            // Remove active class from all filter items
+            filterItems.forEach(fi => fi.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            // Filter articles
+            articleItems.forEach(article => {
+              if (filter === 'all') {
+                article.style.display = 'flex';
+              } else {
+                const categories = article.getAttribute('data-categories');
+                if (categories && categories.includes(filter)) {
+                  article.style.display = 'flex';
+                } else {
+                  article.style.display = 'none';
+                }
+              }
+            });
+          });
+        });
+      });
+    </script>
   </body>
 </html>
