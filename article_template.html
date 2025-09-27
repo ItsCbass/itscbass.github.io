@@ -7,7 +7,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hubot+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="stylesheet" type="text/css" href="style.css?v=1">
+    <style>
+      /* Fallback styles in case external CSS doesn't load */
+      body { background: #0a0a0a !important; color: #ffffff !important; font-family: 'Inter', sans-serif; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+      .article-title { font-size: 4.5rem !important; font-weight: 700 !important; line-height: 1.05 !important; margin: 0 0 50px 0 !important; font-family: 'Hubot Sans', sans-serif !important; letter-spacing: -2px !important; }
+      .blog-description { color: #888888; font-size: 1.1rem; margin-bottom: 40px; }
+      .logo-text { font-family: 'Hubot Sans', sans-serif; font-weight: 700; font-size: 2.5rem; letter-spacing: 2px; }
+      .logo-year { font-family: 'Hubot Sans', sans-serif; font-weight: 400; font-size: 1rem; color: #888888; }
+      .metadata-sidebar { position: sticky; top: 40px; height: fit-content; }
+      .metadata-header { font-size: 0.9rem; font-weight: 600; color: #888888; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+      .metadata-item { margin-bottom: 16px; display: flex; flex-direction: column; gap: 4px; }
+      .metadata-label { font-size: 0.85rem; color: #666666; font-weight: 500; }
+      .metadata-value { font-size: 0.9rem; color: #ffffff; font-weight: 600; }
+      .article-layout { display: grid; grid-template-columns: 300px 1fr; gap: 60px; margin-top: 40px; }
+      p { margin: 20px 0; color: #e0e0e0; line-height: 1.7; font-size: 1.1rem; }
+    </style>
   </head>
   <body>
     <div class="container">
